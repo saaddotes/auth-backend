@@ -3,124 +3,103 @@ import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
-import User from "../models/userModel.js";
-import checkCredentials from "../middleware/checkCredentials.js";
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-import mongoose from "mongoose";
+import User from "./model/user.js";
 
-dotenv.config();
+// dotenv.config();
 
-dotenv.config();
+// const app = express();
+// const PORT = process.env.PORT || 4000;
+// const uri = process.env.MONGODB_URI;
 
-const app = express();
-const PORT = process.env.PORT || 4000;
-const uri = process.env.MONGODB_URI;
+// mongoose
+//   .connect(uri)
+//   .then(() => console.log("DB connected"))
+//   .catch((e) => console.log("Failed to connect:", e.message));
 
-mongoose
-  .connect(uri)
-  .then(() => console.log("DB connected"))
-  .catch((e) => console.log("Failed to connect:", e.message));
+// app.use(express.json());
+// app.use(cors());
 
-app.use(express.json());
-app.use(cors());
+// function checkCredentials(req, res, next) {
+//   const { email, password } = req.body;
 
-const UserSch = mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-});
+//   if (!email || !password) {
+//     return res
+//       .status(400)
+//       .json({ success: false, message: "Email and Password required" });
+//   }
 
-const User = new mongoose.model("User", UserSch);
+//   if (password.length < 6) {
+//     return res.status(400).json({
+//       success: false,
+//       message: "Password must greater then 6 characters",
+//     });
+//   }
 
-function checkCredentials(req, res, next) {
-  const { email, password } = req.body;
+//   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+//   if (!emailRegex.test(email)) {
+//     return res
+//       .status(400)
+//       .json({ success: false, message: "Invalid Email Format" });
+//   }
 
-  if (!email || !password) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email and Password required" });
-  }
+//   next();
+// }
 
-  if (password.length < 6) {
-    return res.status(400).json({
-      success: false,
-      message: "Password must greater then 6 characters",
-    });
-  }
+// app.post("/signup", checkCredentials, async (req, res) => {
+//   const { email, password } = req.body;
+//   const encryptedPass = await bcrypt.hash(password, 10);
 
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  if (!emailRegex.test(email)) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Invalid Email Format" });
-  }
+//   try {
+//     const newUser = await User.create({ email, password: encryptedPass });
+//     const safeData = newUser.toObject();
+//     delete safeData.password;
 
-  next();
-}
+//     res.status(200).json({
+//       success: true,
+//       message: "Created User Succesfully",
+//       data: safeData,
+//     });
+//   } catch (e) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Server Error While adding user : " + e.message,
+//     });
+//   }
+// });
 
-app.post("/signup", checkCredentials, async (req, res) => {
-  const { email, password } = req.body;
-  const encryptedPass = await bcrypt.hash(password, 10);
+// app.post("/login", checkCredentials, async (req, res) => {
+//   const { email, password } = req.body;
 
-  try {
-    const newUser = await User.create({ email, password: encryptedPass });
-    const safeData = newUser.toObject();
-    delete safeData.password;
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+//   try {
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "No User Exists" });
+//     }
 
-    res.status(200).json({
-      success: true,
-      message: "Created User Succesfully",
-      data: safeData,
-      token,
-    });
-  } catch (e) {
-    res.status(500).json({
-      success: false,
-      message: "Server Error While adding user : " + e.message,
-    });
-  }
-});
+//     const checkPass = await bcrypt.compare(password, user.password);
 
-app.post("/login", checkCredentials, async (req, res) => {
-  const { email, password } = req.body;
+//     if (!checkPass) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Incorrect Password" });
+//     }
 
-  try {
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No User Exists" });
-    }
+//     const safeUser = user.toObject();
 
-    const checkPass = await bcrypt.compare(password, user.password);
+//     delete safeUser.password;
 
-    if (!checkPass) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Incorrect Password" });
-    }
-
-    const safeUser = user.toObject();
-
-    delete safeUser.password;
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-
-    res
-      .status(200)
-      .json({ success: true, message: "User Founded", data: safeUser, token });
-  } catch (e) {
-    res.status(500).json({
-      success: false,
-      message: "Server Error While adding user" + e.message,
-    });
-  }
-});
+//     res
+//       .status(200)
+//       .json({ success: true, message: "User Founded", data: safeUser });
+//   } catch (e) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Server Error While adding user" + e.message,
+//     });
+//   }
+// });
 
 app.listen(PORT, () =>
   console.log(`Server is available at http://localhost:${PORT}`)
